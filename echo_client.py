@@ -4,17 +4,23 @@ import traceback
 
 
 def client(msg, log_buffer=sys.stderr):
-    ''' a client function that can send a message and receive a reply. '''
+    ''' client socket that will send a message and receive a reply,
+    :param msg: msg to be sent to server
+    :param log_buffer:
+    :return: msg received from server
+    '''
+    # Connect the socket to the port where the server is listening
     server_address = ('localhost', 10000)
+    # Create a TCP/IP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_IP)
     sock.connect(server_address)
     print('connecting to {0} port {1}'.format(*server_address), file=log_buffer)
-
+    # Send data
     message = b'this is the message. It will be repeated'
     try:
         print('sending "{0}"'.format(msg), file=log_buffer)
         sock.sendall(message)
-
+        # Look for the response
         amount_received = 0
         amount_expected = len(message)
         while amount_received < amount_expected:

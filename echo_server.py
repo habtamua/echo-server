@@ -5,9 +5,14 @@ import os
 
 
 def server(log_buffer=sys.stderr):
-    ''' sends back whatever messages it receives from a client '''
+    '''Server socket, sends back whatever messages it receives from a client
+    :param log_buffer:
+    :return:
+    '''
     address = ('127.0.0.1', 10000)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_IP)
+
+    # to reuse a local socket in TIME_WAIT state, without waiting for its natural timeout to expire
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     print("making a server on {0}:{1}".format(*address), file=log_buffer)
