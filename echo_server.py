@@ -21,25 +21,15 @@ def server(log_buffer=sys.stderr):
             print('waiting for a connection', file=log_buffer)
             conn, add = sock.accept()
             addr = (conn, add)
-
             recvdata = b''
             try:
                 print('connection - {0}:{1}'.format(*addr), file=log_buffer)
                 while True:
-                    # recvdata=conn.recv(16)
                     data = conn.recv(16)
-                    # print(recvdata)
                     print(data)
-                    # data += recvdata
                     recvdata += data
-                    # print('received "{0}"'.format(data))
                     print('received "{0}"'.format(recvdata))
-                    # print("len of received data: {0}".format(len(recvdata)))
                     print("len of received data: {0}".format(len(data)))
-                    # if len(recvdata) < 16:
-                    #     print(log_buffer, "sending data")
-                    #     conn.sendall(data)
-                    #     break
                     if len(data) < 16:
                         print(log_buffer, "sending data")
                         conn.sendall(recvdata)
