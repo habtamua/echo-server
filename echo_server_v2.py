@@ -11,9 +11,10 @@ def server(log_buffer=sys.stderr):
     :param log_buffer:
     :return:
     '''
-    address = ('127.0.0.1', 10000)
+    address = ('localhost', 10001)
     # TCP socket with IPv4 Addressing
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_IP)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     # Reuse a local socket in TIME_WAIT state,
     # without waiting for its natural timeout to expire
@@ -24,37 +25,31 @@ def server(log_buffer=sys.stderr):
     # Binding new sock to the address above,& begin to listen for incoming conn
     sock.bind(address)
     sock.listen(1)
-
     try:
-        # the outer loop controls the creation of new connection sockets. The
-        # server will handle each incoming connection one at a time.
         while True:
-            print('waiting for a connection', file=log_buffer)
+            # Wait for a connection
+            print('waiting for a connection:›')
             conn, add = sock.accept()
             addr = (conn, add)
-            recvdata = b''
             try:
-                print('connection - {0}:{1}'.format(*addr), file=log_buffer)
+                print('connection from - {0}:{1}'.format(*addr), file=log_buffer)
+                # Receive the data in small chunks and retransmit it
                 while True:
                     data = conn.recv(16)
-                    print('{0}'.format(data.decode('utf8')))
-                    recvdata += data
-                    print('received "{0}"'.format(recvdata.decode('utf8')))
-                    print("len of received data: {0}".format(len(recvdata)))
-                    if len(data) < 16:
-                        print(log_buffer, "sending data")
-                        conn.sendall(recvdata)
-                        print('sent "{0}"'.format(data.decode('utf8')))
+                    print('received:› {0}'.format(data.decode('utf8')))
+                    if data:
+                        recvdata = data.decode('utf8')
+                        print(f'sending data back to the client:› {recvdata}')
+                        conn.sendall(data)
+                    else:
+                        print('no data from', addr)
                         break
-                conn.close()
-                print('no data from', add)
-
             except BrokenPipeError as err:
                 traceback.print_exc(err)
                 sys.exit(1)
+
             finally:
-                print('echo complete, client conn closed', file=log_buffer)
-                # Clean up the connections
+                # Clean up the connection
                 conn.close()
 
     except KeyboardInterrupt:

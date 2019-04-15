@@ -17,24 +17,37 @@ def client(msg, log_buffer=sys.stderr):
     sock.connect(server_address)
     print('connecting to {0} port {1}'.format(*server_address), file=log_buffer)
     # Send data
-    message = b'this is the message. It will be repeated'
+    message = b''
     try:
         print('sending "{0}"'.format(msg), file=log_buffer)
-        sock.sendall(message)
-        # Look for the response
-        amount_received = 0
-        amount_expected = len(message)
-        while amount_received < amount_expected:
-            data = sock.recv(16)
-            amount_received += len(data)
-            print('received "{0}"'.format(message.decode('utf8')), file=log_buffer)
-    except Exception as e:
-        traceback.print_exc()
+        # sock.sendall(message)
+        # # Look for the response
+        # amount_received = 0
+        # amount_expected = len(message)
+        # while amount_received < amount_expected:
+        #     data = sock.recv(16)
+        #     amount_received += len(data)
+        sock.sendall(msg.encode('utf8'))
+        buffersize = 16
+        chunk = ''
+        done = False
+        while not done:
+            chunk = sock.recv(buffersize)
+            # if chunk == msg:
+            if len(chunk) < buffersize:
+                done = True
+                # break
+                sock.close()
+        message += chunk
+        # print('received "{0}"'.format(msg.decode('utf8')), file=log_buffer)
+        print('received "{0}"'.format(chunk))
+    except BrokenPipeError as err:
+        traceback.print_exc(err)
         sys.exit(1)
     finally:
         print('closing socket', file=log_buffer)
         sock.close()
-    return data
+    return message.decode('utf')
 
 
 if __name__ == '__main__':

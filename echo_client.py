@@ -1,3 +1,4 @@
+
 import socket
 import sys
 import traceback
@@ -9,33 +10,38 @@ def client(msg, log_buffer=sys.stderr):
     :param log_buffer:
     :return: msg received from server
     '''
-    # Connect the socket to the port where the server is listening
-    server_address = ('localhost', 10000)
     # Create a TCP/IP socket
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_IP) as sock:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+        # Connect the socket to the port where the server is listening
+        server_address = ('localhost', 10001)
+        print('connecting to:› {} port {}'.format(*server_address))
         sock.connect(server_address)
-        print('connecting to {0} port {1}'.format(*server_address), file=log_buffer)
-        # Send data
-        # message = b'this is the message. It will be repeated'
         recvdata = b''
         try:
-            print('sending "{0}"'.format(msg), file=log_buffer)
+            # Send data
+            print('sending:› {!r}'.format(msg))
             sock.sendall(msg.encode('utf8'))
+
+            received = 0
+            expected = len(msg)
+
             # Look for the response
-            amount_received = 0
-            amount_expected = len(msg)
-            while amount_received < amount_expected:
+            while received < expected:
                 data = sock.recv(16)
                 recvdata += data
-                amount_received += len(recvdata)
-                print('received "{0}"'.format(recvdata.decode('utf8')), file=log_buffer)
+                received += len(data)
+                print('received:› {!r}'.format(recvdata))
+
         except BrokenPipeError as err:
             traceback.print_exc(err)
             sys.exit(1)
+
         finally:
-            print('closing socket', file=log_buffer)
-            # sock.close()
-        # return msg
+            print('closing socket')
+            sock.close()
+
         return recvdata.decode('utf8')
 
 
